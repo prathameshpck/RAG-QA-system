@@ -9,4 +9,4 @@ RUN apt-get update --fix-missing && apt-get install -y --fix-missing \
 RUN pip install chromadb
 EXPOSE 8000
 
-CMD ["/usr/local/bin/chroma","run"]
+CMD ["/usr/local/bin/chroma","run", "--host" , "0.0.0.0"]

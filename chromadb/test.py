@@ -1,6 +1,6 @@
 import chromadb
 chroma_client = chromadb.HttpClient(host='localhost', port=8000)
-
+print(chroma_client.heartbeat())
 
 collection = chroma_client.get_or_create_collection(name="my_collection")
 collection.add(
