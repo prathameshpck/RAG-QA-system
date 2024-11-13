@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  chromadb: 
+    build:
+      context: ./chromadb
+      dockerfile: dockerfile 
+  
+    ports: 
+      - "8000:8000"
+
+    volumes:
+      - ./s3-simul:/textbooks
