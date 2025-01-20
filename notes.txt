@@ -1,0 +1,21 @@
+This file is basically to compile notes and things to do as setup 
+
+Steps to follow when building application 
+    Request spot instance and SSH into it using you pinto.pem key 
+    Attach an EBS storage to it (free tier comes with 30gb)
+    Change your docker daemon to store all your docker files into a directory in your EBS. 
+    This will allow you to have plenty of space to load your LLM container and setup your VLLM server 
+
+Things done:-
+    Set up Vllm and a model running on it. Can make API calls to it. 
+    
+
+Things to do rn:- 
+    Get the front end working using docker file 
+
+
+Things to do: 
+    write docker compose file to have both containers up and runnings 
+    Figure out docker networking stuff so that you can perform API calls from the front end 
+    expose the front end to general internet so that you can access this anywhere 
+
