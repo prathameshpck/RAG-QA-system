@@ -1,13 +1,42 @@
-version: '3'
 
 services:
-  chromadb: 
+  frontend:
     build:
-      context: ./chromadb
-      dockerfile: dockerfile 
-  
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - llm
+
+  llm: 
+    image: vllm/vllm-openai:latest 
+    runtime: nvidia
+    container_name: llm 
     ports: 
       - "8000:8000"
+    volumes: 
+      - ~/.cache/huggingface:/root/.cache/huggingface 
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=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 
+    ipc: host
+    command: [
+      "--model",
+      "neuralmagic/Llama-2-7b-chat-quantized.w8a8"
+    ]
+    
+  # llm:
+  #   build:
+  #     context: ./vllm
+  #     dockerfile: Dockerfile
+  #   container_name: llm
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - ~/.cache/huggingface:/root/.cache/huggingface
+  #   environment:
+  #     - HUGGING_FACE_HUB_TOKEN=<your_huggingface_token>
+  #     - MODEL_NAME=neuralmagic/Llama-2-7b-chat-quantized.w8a8
 
-    volumes:
-      - ./s3-simul:/textbooks
+  #   ipc: host
+  #   runtime: nvidia

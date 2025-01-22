@@ -1,0 +1,13 @@
+This file is a readme for the vllm 
+
+Docker command:- # Deploy with docker on Linux:
+docker run --runtime nvidia --gpus all \
+	--name my_vllm_container \
+	-v ~/.cache/huggingface:/root/.cache/huggingface \
+ 	--env "HUGGING_FACE_HUB_TOKEN=<secret>" \
+	-p 8000:8000 \
+	--ipc=host \
+	vllm/vllm-openai:latest \
+	--model neuralmagic/Llama-2-7b-chat-quantized.w8a8
+
+	i-0cbb3baad7d9dfbf0

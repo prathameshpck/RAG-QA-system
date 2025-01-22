@@ -6,16 +6,20 @@ Steps to follow when building application
     Change your docker daemon to store all your docker files into a directory in your EBS. 
     This will allow you to have plenty of space to load your LLM container and setup your VLLM server 
 
+    aws ec2 describe-volumes to see the instances, and then you can mount it using the volume id 
+    
+
 Things done:-
     Set up Vllm and a model running on it. Can make API calls to it. 
+    Get the front end working using docker file 
     
 
 Things to do rn:- 
-    Get the front end working using docker file 
-
-
-Things to do: 
+    expose the front end to general internet so that you can access this anywhere 
     write docker compose file to have both containers up and runnings 
+
+
+Things to do:    
     Figure out docker networking stuff so that you can perform API calls from the front end 
     expose the front end to general internet so that you can access this anywhere 
 
