@@ -12,14 +12,22 @@ Steps to follow when building application
 Things done:-
     Set up Vllm and a model running on it. Can make API calls to it. 
     Get the front end working using docker file 
+    Figure out docker networking stuff so that you can perform API calls from the front end 
+    expose the front end to general internet so that you can access this anywhere
     
 
 Things to do rn:- 
-    expose the front end to general internet so that you can access this anywhere 
-    write docker compose file to have both containers up and runnings 
+     Docker compose the setup 
+     curl the LLM to see if I can see metrics 
+     add basic Prometheus.file 
+     
 
 
 Things to do:    
-    Figure out docker networking stuff so that you can perform API calls from the front end 
-    expose the front end to general internet so that you can access this anywhere 
+    Have a basic Prometheus set up, in a container, with grafana 
+    Add a vectorDB, vectorize content 
+    "unabstract" vllm server to use vectorDB to generate answers 
+     
+    Add health checks for the depends_on containers 
+
 

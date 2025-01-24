@@ -24,6 +24,22 @@ services:
       "--model",
       "neuralmagic/Llama-2-7b-chat-quantized.w8a8"
     ]
+
+  prometheus: 
+    image: prom/prometheus 
+    ports: 
+      - 9090:9090 
+    container_name: prometheus
+    volumes: 
+      - /home/ubuntu/app/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml 
+    
+  grafana: 
+    image: grafana/grafana 
+    ports: 
+      - 3000:3000 
+    container_name: grafana 
+    
+
     
   # llm:
   #   build:
