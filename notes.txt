@@ -14,20 +14,22 @@ Things done:-
     Get the front end working using docker file 
     Figure out docker networking stuff so that you can perform API calls from the front end 
     expose the front end to general internet so that you can access this anywhere
-    
+    Added Prometheus and grafana 
+    linked all components
+    Also changed the security group so that I can access grafana dashboard from anywhere to view logs 
 
 Things to do rn:- 
-     Docker compose the setup 
-     curl the LLM to see if I can see metrics 
-     add basic Prometheus.file 
+     Add the containers for GPU and CPU usage metrics 
+     add that to the Prometheus logging 
+     build grafana dashboard 
+     write the bash script to docker setup 
+     
      
 
 
 Things to do:    
-    Have a basic Prometheus set up, in a container, with grafana 
     Add a vectorDB, vectorize content 
-    "unabstract" vllm server to use vectorDB to generate answers 
-     
+    "unabstract" vllm server to use vectorDB to generate answers     
     Add health checks for the depends_on containers 
 
 
