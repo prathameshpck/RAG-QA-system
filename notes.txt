@@ -17,11 +17,15 @@ Things done:-
     Added Prometheus and grafana 
     linked all components
     Also changed the security group so that I can access grafana dashboard from anywhere to view logs 
+    Add the containers for GPU and CPU usage metrics 
+    add that to the Prometheus logging 
+    Added those containers to grafana 
+         
+     
 
 Things to do rn:- 
-     Add the containers for GPU and CPU usage metrics 
-     add that to the Prometheus logging 
-     build grafana dashboard 
+     
+     
      write the bash script to docker setup 
      
      

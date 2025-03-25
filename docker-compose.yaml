@@ -40,19 +40,19 @@ services:
     container_name: grafana 
     
 
-    
-  # llm:
-  #   build:
-  #     context: ./vllm
-  #     dockerfile: Dockerfile
-  #   container_name: llm
-  #   ports:
-  #     - "8000:8000"
-  #   volumes:
-  #     - ~/.cache/huggingface:/root/.cache/huggingface
-  #   environment:
-  #     - HUGGING_FACE_HUB_TOKEN=<your_huggingface_token>
-  #     - MODEL_NAME=neuralmagic/Llama-2-7b-chat-quantized.w8a8
-
-  #   ipc: host
-  #   runtime: nvidia
+  nvidia-dgcm: 
+    image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.9-3.6.1-ubuntu22.04 
+    ports: 
+      - 9400:9400 
+    container_name: nvidia-dgcm 
+    runtime: nvidia 
+    environment: 
+      - NVIDIA_VISIBLE_DEVICES=all 
+    cap_add: 
+     - SYS_ADMIN
+  
+  node-exporter: 
+    image: prom/node-exporter 
+    ports: 
+      - 9100:9100
+    container_name: node-exporter

@@ -13,7 +13,7 @@ const App = () => {
   
     try {
       // Make an API call to your LLM endpoint
-      const response = await axios.post('http://localhost:8000/v1/chat/completions', {
+      const response = await axios.post('http://llm:8000/v1/chat/completions', {
         model: "neuralmagic/Llama-2-7b-chat-quantized.w8a8",
         messages: [
           {
