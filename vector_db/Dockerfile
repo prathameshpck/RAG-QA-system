@@ -1,0 +1,14 @@
+FROM semitechnologies/weaviate:1.24.8
+
+# Set the required environment variables
+ENV QUERY_DEFAULTS_LIMIT=25
+ENV AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
+ENV PERSISTENCE_DATA_PATH=/var/lib/weaviate
+ENV DEFAULT_VECTORIZER_MODULE=none
+ENV ENABLE_MODULES=""
+ENV CLUSTER_HOSTNAME=node1
+
+EXPOSE 8080
+EXPOSE 50051
+
+# Default CMD is fine, no need to override
