@@ -1,5 +1,37 @@
 
 services:
+
+
+
+  weaviate: 
+    build: 
+      context: ./vector_db
+      dockerfile: Dockerfile
+    ports: 
+      - "8081:8080"
+      - "50051:50051"
+    environment: 
+      - QUERY_DEFAULTS_LIMIT=25
+      - AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
+      - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+      - DEFAULT_VECTORIZER_MODULE=none
+      - ENABLE_MODULES=""
+      - CLUSTER_HOSTNAME=node1
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+
+  ingest: 
+    build : ./ingestion
+    depends_on: 
+      weaviate: 
+        condition: service_healthy 
+    entrypoint: ["python" , "ingestion.py"]
+      
   frontend:
     build:
       context: ./frontend

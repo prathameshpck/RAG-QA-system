@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 import weaviate
 from sentence_transformers import SentenceTransformer
 from bertopic import BERTopic
@@ -9,10 +9,13 @@ import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 import hashlib
+import json 
+import math 
+
 
 # --- Config ---
 DATA_DIR = "./data/processed_transcripts"
-CHUNK_SIZE = 200
+CHUNK_SIZE = 300
 CLASS_NAME = "TextChunk"
 QUERY = "What is the most important when it comes to attraction and sex?"
 
@@ -43,8 +46,10 @@ def setup_weaviate_class(client: weaviate.WeaviateClient, class_name: str):
 
 
 def load_and_chunk_documents(folder: str, chunk_size: int) -> Tuple[List[str], List[Tuple[str, str]]]:
+    """Returns full document texts, chunked (text, doc_id) pairs, and chunked-only texts for LDA chunk-mode."""
     doc_texts = []
     chunked_docs = []
+    chunked_texts = []
 
     for filepath in Path(folder).glob("*.txt"):
         with open(filepath, "r", encoding="utf-8") as f:
@@ -53,8 +58,9 @@ def load_and_chunk_documents(folder: str, chunk_size: int) -> Tuple[List[str], L
         chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
         doc_texts.append(" ".join(words))  # full document text
         chunked_docs.extend([(chunk, filepath.stem) for chunk in chunks])
+        chunked_texts.extend(chunks)
 
-    return doc_texts, chunked_docs
+    return doc_texts, chunked_docs, chunked_texts
 
 
 def ingest_to_weaviate(collection, embedder, chunked_docs: List[Tuple[str, str]]):
@@ -94,40 +100,72 @@ def ingest_to_weaviate(collection, embedder, chunked_docs: List[Tuple[str, str]]
 #         axs[i].set_title(f"Topic {topic}")
 
 #     for j in range(i + 1, len(axs)):
-#         axs[j].axis("off")
+#         axs[j].axis("):off")
 
 #     plt.tight_layout()
 #     plt.show()
 
 
 
-def run_topic_modeling_lda(doc_texts, num_topics = 50, max_words=15):
-    # Step 1: Create the document-term matrix
+
+def run_topic_modeling_lda(
+    texts: List[str], num_topics: int = 10, max_words: int = 15,
+    mode: str = "chunk", json_path: str = "./topic_words.json"
+) -> Dict[int, Dict[str, float]]:
+    """
+    Perform LDA topic modeling and display paginated wordclouds for each topic.
+    Also saves all topic word frequencies into a single JSON file.
+
+    Returns:
+        Dictionary of topic -> word: weight
+    """
+    assert mode in ["chunk", "document"], "mode must be 'chunk' or 'document'"
+
+    print(f"🧠 Running LDA topic modeling at {mode}-level on {len(texts)} items...")
+
     vectorizer = CountVectorizer(stop_words='english', max_df=0.95, min_df=2)
-    dtm = vectorizer.fit_transform(doc_texts)
+    dtm = vectorizer.fit_transform(texts)
     vocab = vectorizer.get_feature_names_out()
 
-    # Step 2: Fit the LDA 25model
     lda = LatentDirichletAllocation(n_components=num_topics, random_state=42)
     lda.fit(dtm)
 
-    # Step 3: Visualize each topic as a word cloud
-    fig_rows = (num_topics + 2) // 3
-    fig, axs = plt.subplots(fig_rows, 3, figsize=(15, fig_rows * 4))
-    axs = axs.flatten()
+    topic_word_dict = {}
 
-    for topic_idx, topic in enumerate(lda.components_[:num_topics]):
-        word_freqs = {vocab[i]: topic[i] for i in topic.argsort()[-max_words:]}
-        wc = WordCloud(width=400, height=300, background_color='white').generate_from_frequencies(word_freqs)
-        axs[topic_idx].imshow(wc, interpolation="bilinear")
-        axs[topic_idx].axis("off")
-        axs[topic_idx].set_title(f"Topic {topic_idx}")
+    # Paginate: display 5 topics per page
+    topics_per_page = 5
+    num_pages = math.ceil(num_topics / topics_per_page)
 
-    for j in range(topic_idx + 1, len(axs)):
-        axs[j].axis("off")
+    for page in range(num_pages):
+        start_idx = page * topics_per_page
+        end_idx = min((page + 1) * topics_per_page, num_topics)
+        current_topics = end_idx - start_idx
 
-    plt.tight_layout()
-    plt.show()
+        fig, axs = plt.subplots(current_topics, 1, figsize=(12, current_topics * 4))
+        if current_topics == 1:
+            axs = [axs]
+
+        for i, topic_idx in enumerate(range(start_idx, end_idx)):
+            topic = lda.components_[topic_idx]
+            word_freqs = {vocab[j]: topic[j] for j in topic.argsort()[-max_words:]}
+            topic_word_dict[topic_idx] = word_freqs
+
+            wc = WordCloud(width=1000, height=400, background_color='white', max_font_size=80)
+            wc.generate_from_frequencies(word_freqs)
+
+            axs[i].imshow(wc, interpolation="bilinear")
+            axs[i].axis("off")
+            axs[i].set_title(f"Topic {topic_idx}", fontsize=16, pad=10)
+
+        plt.tight_layout()
+        plt.show()
+
+    # Save topic word dictionary to JSON
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(topic_word_dict, f, indent=2)
+        print(f"✅ Saved topic words to {json_path}")
+
+    return topic_word_dict
 
 
 def query_similar_chunks(collection, embedder, query: str, k: int = 5):
@@ -142,24 +180,24 @@ def query_similar_chunks(collection, embedder, query: str, k: int = 5):
 
 
 def main():
-    client = connect_weaviate()
-    collection = setup_weaviate_class(client, CLASS_NAME)
+    # client = connect_weaviate()
+    # collection = setup_weaviate_class(client, CLASS_NAME)
     embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
-    doc_texts, chunked_docs = load_and_chunk_documents(DATA_DIR, CHUNK_SIZE)
+    doc_texts, chunked_docs, chunked_texts = load_and_chunk_documents(DATA_DIR, CHUNK_SIZE)
 
     print(f"📄 Loaded {len(doc_texts)} documents and {len(chunked_docs)} chunks.")
     print("📥 Ingesting into Weaviate...")
-    ingest_to_weaviate(collection, embedder, chunked_docs)
+    # ingest_to_weaviate(collection, embedder, chunked_docs)
     print("✅ Ingestion complete.")
 
-    print("\n🎯 Running topic modeling at document level...")
-    run_topic_modeling_lda(doc_texts)
+    print("\n🎯 Running topic modeling at chunk level...")
+    run_topic_modeling_lda(doc_texts, mode = "document")
 
     print("\n🔎 Querying vector DB...")
-    query_similar_chunks(collection, embedder, QUERY)
+    # query_similar_chunks(collection, embedder, QUERY)
 
-    client.close()
+    # client.close()
 
 
 if __name__ == "__main__":
