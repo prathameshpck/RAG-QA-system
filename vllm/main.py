@@ -70,7 +70,7 @@ app.add_middleware(
 )
 
 # Load the LLM model with OpenAI server defaults
-model_name = os.getenv("MODEL_NAME", "neuralmagic/Llama-2-7b-chat-quantized.w8a8")
+model_name = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-0.5B-Instruct")
 try:
     engine = LLM(
         model=model_name,

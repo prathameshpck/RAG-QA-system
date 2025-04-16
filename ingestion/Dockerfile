@@ -15,3 +15,5 @@ COPY . .
 
 # Set entrypoint
 # ENTRYPOINT ["python", "ingestion.py"]
+
+
