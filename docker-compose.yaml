@@ -1,8 +1,6 @@
 
 services:
 
-
-
   weaviate: 
     build: 
       context: ./vector_db
@@ -41,21 +39,24 @@ services:
     depends_on:
       - llm
 
-  llm: 
-    image: vllm/vllm-openai:latest 
+  llm:
+    build:
+      context: ./vllm
+      dockerfile: Dockerfile
     runtime: nvidia
-    container_name: llm 
-    ports: 
+    container_name: llm
+    ports:
       - "8000:8000"
-    volumes: 
-      - ~/.cache/huggingface:/root/.cache/huggingface 
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
     environment:
-      - HUGGING_FACE_HUB_TOKEN=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 
+      - MODEL_NAME=neuralmagic/Llama-2-7b-chat-quantized.w8a8
+      - HUGGING_FACE_HUB_TOKEN=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
     ipc: host
-    command: [
-      "--model",
-      "neuralmagic/Llama-2-7b-chat-quantized.w8a8"
-    ]
+    depends_on:
+      weaviate:
+        condition: service_healthy
+
 
   prometheus: 
     image: prom/prometheus 
@@ -63,7 +64,7 @@ services:
       - 9090:9090 
     container_name: prometheus
     volumes: 
-      - /home/ubuntu/app/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml 
+      - /home/ubuntu/MLE/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml 
     
   grafana: 
     image: grafana/grafana 
