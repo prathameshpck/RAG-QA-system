@@ -50,7 +50,7 @@ services:
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
     environment:
-      - MODEL_NAME=Qwen/Qwen2.5-0.5B-Instruct
+      - MODEL_NAME=Qwen/Qwen2.5-3B-Instruct-GPTQ-Int8
       - HUGGING_FACE_HUB_TOKEN=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
     ipc: host
     depends_on:
@@ -64,7 +64,7 @@ services:
       - 9090:9090 
     container_name: prometheus
     volumes: 
-      - /home/pinto/Desktop/MLE/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml 
+      - /home/ubuntu/MLE/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml 
     
   grafana: 
     image: grafana/grafana 

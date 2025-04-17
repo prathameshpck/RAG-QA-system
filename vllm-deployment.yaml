@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      containers:
+      - name: vllm
+        image: vllm:local
+        imagePullPolicy: Never
+        ports:
+          - containerPort: 8000
+        env:
+          - name: MODEL_NAME
+            value: Qwen/Qwen2.5-3B-Instruct-GPTQ-Int8
+          - name: HUGGING_FACE_HUB_TOKEN
+            value: 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
+          - name: CUDA_VISIBLE_DEVICES
+            value: "0"
+        volumeMounts:
+          - name: hf-cache
+            mountPath: /root/.cache/huggingface
+      volumes:
+        - name: hf-cache
+          hostPath:
+            path: /home/ubuntu/.cache/huggingface
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-service
+spec:
+  selector:
+    app: vllm
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30080
