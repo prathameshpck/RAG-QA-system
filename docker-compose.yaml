@@ -64,7 +64,7 @@ services:
       - 9090:9090 
     container_name: prometheus
     volumes: 
-      - /home/pinto/Desktop/MLE/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml 
+      - /home/ubuntu/MLE/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml 
     
   grafana: 
     image: grafana/grafana 

@@ -1,74 +1,106 @@
 import React, { useState } from 'react';
 import ChatWindow from './components/ChatWindow';
 import MessageInput from './components/MessageInput';
-import axios from 'axios';
 
 const App = () => {
   const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Function to handle sending messages
-  const handleSendMessage = async (message) => {
-    // Add user's message to the chat
-    setMessages((prev) => [...prev, { text: message, type: 'user' }]);
+  const handleSendMessage = async (userMessage) => {
+    if (!userMessage.trim()) return;
+
+    // Add user message to state
+    const newMessages = [...messages, { text: userMessage, type: 'user' }];
+    setMessages(newMessages);
+    setIsLoading(true);
+
+    // Convert to OpenAI-compatible message format
+    const formattedMessages = newMessages.map((msg) => ({
+      role: msg.type === 'user' ? 'user' : 'assistant',
+      content: msg.text
+    }));
+
+    // Add placeholder for streaming bot message
+    setMessages((prev) => [...prev, { text: '', type: 'bot' }]);
 
     try {
-      // Make an API call to your LLM endpoint
-      const response = await axios.post('/v1/chat/completions', {
-        model: "neuralmagic/Llama-2-7b-chat-quantized.w8a8",
-        messages: [
-          {
-            role: "user",
-            content: message // User's input message
-          }
-        ]
-      }, {
+      const response = await fetch('http://localhost:8000/v1/chat/completions', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: JSON.stringify({
+          model: "neuralmagic/Llama-2-7b-chat-quantized.w8a8",
+          messages: formattedMessages,
+          stream: true,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let accumulated = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+
+        // Parse each line starting with 'data:'
+        const lines = chunk.split('\n').filter(line => line.startsWith('data:'));
+        for (const line of lines) {
+          const data = line.replace(/^data:\s*/, '');
+          if (data === '[DONE]') continue;
+
+          const json = JSON.parse(data);
+          const delta = json.choices?.[0]?.delta?.content;
+          if (delta) {
+            accumulated += delta;
+
+            // Replace the last bot message with the streaming one
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = { text: accumulated, type: 'bot' };
+              return updated;
+            });
+          }
         }
-      });
-
-      // Extract and add the assistant's response
-      const botResponse = response.data.choices?.[0]?.message?.content || "No response from the model.";
-      setMessages((prev) => [...prev, { text: botResponse, type: 'bot' }]);
-    } catch (error) {
-      // Enhanced error handling to always show the actual error message
-      console.error('Error communicating with the LLM API:', error);
-
-      let errorMessage = 'Unknown error occurred.';
-
-      if (error.response) {
-        // Server responded with a status code out of the 2xx range
-        errorMessage = `Server Error (${error.response.status}): ${JSON.stringify(error.response.data)}`;
-      } else if (error.request) {
-        // Request was made but no response received
-        errorMessage = `No response from server. Possible network issue or server down.`;
-      } else {
-        // Something else caused the error
-        errorMessage = `Error: ${error.message}`;
       }
-
-      // Log the detailed error to the console
-      console.error('Detailed error:', {
-        message: error.message,
-        response: error.response ? error.response.data : null,
-        request: error.request ? error.request : null,
-      });
-
-      // Always return the actual error message to the chat
+    } catch (err) {
+      console.error('Streaming error:', err);
       setMessages((prev) => [
         ...prev,
-        { text: errorMessage, type: 'bot' },
+        { text: 'Error during streaming response.', type: 'bot' }
       ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '20px auto', textAlign: 'center' }}>
-      <h1>ChatGPT UI</h1>
-      <ChatWindow messages={messages} />
+    <div style={styles.appContainer}>
+      <h1 style={styles.header}>ChatGPT UI</h1>
+      <ChatWindow messages={messages} isLoading={isLoading} />
       <MessageInput onSend={handleSendMessage} />
     </div>
   );
+};
+
+const styles = {
+  appContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+    backgroundColor: '#121212',
+    color: '#FFFFFF',
+  },
+  header: {
+    marginBottom: '20px',
+    fontSize: '24px',
+  },
 };
 
 export default App;
