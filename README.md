@@ -41,12 +41,12 @@ This project demonstrates how to integrate cutting-edge components to build a re
 - 🔄 **K8s-native Scaling** of LLM inference pods
 - 🧪 **Load tested** up to 5+ concurrent users per pod with intelligent batching
 
-## 📸 Demo
+## 📸 Load Testing Results
 
 <p align="center">
   <img src="assets/demo-chat.png" width="500"/>
   <br>
-  <em>Real-time chat session using podcast content + Weaviate retrieval</em>
+  <em>Load Testing results</em>
 </p>
 
 ## 📈 Sample Metrics
