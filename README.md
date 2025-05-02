@@ -44,7 +44,7 @@ This project demonstrates how to integrate cutting-edge components to build a re
 ## 📸 Load Testing Results
 
 <p align="center">
-  <img src="assets/demo-chat.png" width="500"/>
+  <img src="assets/load-test.png" width="500"/>
   <br>
   <em>Load Testing results</em>
 </p>
